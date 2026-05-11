@@ -1,0 +1,27 @@
+{
+  "Iec104Simulation": {
+    "CycleTimeMs": 5000,
+    "DataPointConfiguration": {
+      "Measures": [
+        {
+          "Id": "ç",
+          "Oa": "1",
+          "InitValue": "-2.682703",
+          "TypeId": 13,
+          "Mode": "CyclicStatic",
+          "Ca": 1
+        },
+        {
+          "Id": "_982423ba-a862-4ab4-bbdc-b63a4fa26875",
+          "Oa": "2",
+          "InitValue": "2.683851",
+          "TypeId": 13,
+          "Mode": "CyclicStatic",
+          "Ca": 1
+        }
+      ],
+      "Commands": [
+      ]
+    }
+  }
+}
