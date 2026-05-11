@@ -1,2 +1,7 @@
-.idea/*
-*.iml
+# Ignore the unshaded JAR — only the shaded (fat) JAR is checked in
+connectors/Iec104SourceConnector-*[!d].jar
+!connectors/Iec104SourceConnector-*-shaded.jar
+
+# Ignore the JMX agent JAR — it is checked in intentionally
+# (remove this line if you want git to ignore it too)
+# jmx-exporter/jmx_prometheus_javaagent-*.jar

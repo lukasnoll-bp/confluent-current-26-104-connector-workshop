@@ -1,0 +1,250 @@
+###############################################################################
+# IEC 104 Kafka Source Connector – Demo Stack
+# CP 8.2 · KRaft (no Zookeeper) · Schema Registry · Avro for JDBC Sink
+###############################################################################
+
+services:
+
+  # ── Kafka (KRaft – combined broker + controller) ──────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:8.2.0
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"        # host access
+      - "29092:29092"      # inter-container (if needed from host tooling)
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"   # fixed cluster-id for reproducibility
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:29092 | grep -q 'ApiVersion'"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── Schema Registry ──────────────────────────────────────────────────────
+  schema-registry:
+    image: confluentinc/cp-schema-registry:8.2.0
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:29092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/subjects || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── IEC 104 Simulator ─────────────────────────────────────────────────────
+  iec104-simulator:
+    image: ghcr.io/richyp7/iec60870-5-104-simulator:v1.0.0
+    hostname: iec104-simulator
+    container_name: iec104-simulator
+    ports:
+      - "2404:2404"        # IEC 104 protocol
+      - "8080:8080"        # Simulator web dashboard
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+
+  iec104-frontend:
+    image: ghcr.io/richyp7/iec60870-5-104-simulator-ui:v1.0.0
+    hostname: iec104-frontend
+    container_name: iec104-frontend
+    ports:
+      - "4300:80"
+    environment:
+      - ENV_API_ENDPOINT=http://localhost:8080/api/
+      - ENV_API_HEALTH_ENDPOINT=http://localhost:8080/health/
+      - ENV_HUB_ENDPOINT=http://localhost:8080/hubs/simulation
+    depends_on:
+      - iec104-simulator
+
+  # ── Kafka Connect – Source (IEC 104) ──────────────────────────────────────
+  connect-source:
+    build:
+      context: .
+      dockerfile: Dockerfile.connect-source
+    hostname: connect-source
+    container_name: connect-source
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+      - "9404:9404"       # JMX Prometheus exporter
+    volumes:
+      - ./jmx-exporter/config.yml:/opt/jmx-exporter/config.yml:ro
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:29092
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-source
+      CONNECT_GROUP_ID: connect-source-group
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-source-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-source-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-source-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent-1.0.1.jar=9404:/opt/jmx-exporter/config.yml"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
+
+  # ── Kafka Connect – Sink (JDBC → PostgreSQL) ─────────────────────────────
+  connect-sink:
+    image: confluentinc/cp-kafka-connect:8.2.0
+    hostname: connect-sink
+    container_name: connect-sink
+    depends_on:
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8084:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:29092
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-sink
+      CONNECT_GROUP_ID: connect-sink-group
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-sink-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-sink-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-sink-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+    command:
+      - bash
+      - -c
+      - |
+        echo "Installing JDBC Sink connector …"
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest
+        echo "Launching Kafka Connect …"
+        /etc/confluent/docker/run
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+
+  # ── ksqlDB Server (flattens nested objects array) ─────────────────────────
+  ksqldb-server:
+    image: confluentinc/cp-ksqldb-server:8.2.0
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    depends_on:
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: kafka:29092
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_KSQL_SERVICE_ID: iec104_ksqldb
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8088/info || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 45s
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16
+    hostname: postgres
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: iec104
+      POSTGRES_USER: iec104
+      POSTGRES_PASSWORD: iec104
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iec104 -d iec104"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Prometheus (scrapes JMX exporter on Kafka Connect) ────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    hostname: prometheus
+    container_name: prometheus
+    depends_on:
+      connect-source:
+        condition: service_healthy
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  # ── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana-oss:11.6.0
+    hostname: grafana
+    container_name: grafana
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/iec104-demo.json
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+volumes:
+  pgdata:

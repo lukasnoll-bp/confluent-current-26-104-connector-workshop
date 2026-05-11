@@ -1,0 +1,42 @@
+###############################################################################
+# JMX Prometheus Exporter – rules for IEC 104 Source Connector metrics
+# Exposed on :9404/metrics by the jmx_prometheus_javaagent
+###############################################################################
+
+startDelaySeconds: 0
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+
+rules:
+
+  # ── Custom IEC 104 connector metrics ──────────────────────────────────────
+  # MBean: iec104-connector:type=iec104-source-task-metrics,target-id=<id>
+  - pattern: "iec104-connector<type=iec104-source-task-metrics, target-id=(.+)><>(.+):"
+    name: "iec104_source_$2"
+    labels:
+      target_id: "$1"
+    type: UNTYPED
+
+  # ── Kafka Connect worker-level metrics ────────────────────────────────────
+  # MBean: kafka.connect:type=connect-worker-metrics
+  - pattern: "kafka\\.connect<type=connect-worker-metrics><>(connector-count|connector-startup-attempts-total|connector-startup-failure-total|connector-startup-success-total|task-count|task-startup-attempts-total|task-startup-failure-total|task-startup-success-total):"
+    name: "kafka_connect_worker_$1"
+    type: UNTYPED
+
+  # ── Kafka Connect per-connector task metrics ──────────────────────────────
+  # MBean: kafka.connect:type=connector-task-metrics,connector=<name>,task=<id>
+  - pattern: "kafka\\.connect<type=connector-task-metrics, connector=(.+), task=(.+)><>(status|running-ratio|pause-ratio|batch-size-avg|batch-size-max|offset-commit-avg-time-ms|offset-commit-success-percentage):"
+    name: "kafka_connect_task_$3"
+    labels:
+      connector: "$1"
+      task: "$2"
+    type: UNTYPED
+
+  # ── Kafka Connect source task metrics ─────────────────────────────────────
+  # MBean: kafka.connect:type=source-task-metrics,connector=<name>,task=<id>
+  - pattern: "kafka\\.connect<type=source-task-metrics, connector=(.+), task=(.+)><>(source-record-poll-rate|source-record-poll-total|source-record-write-rate|source-record-write-total|poll-batch-avg-time-ms):"
+    name: "kafka_connect_source_task_$3"
+    labels:
+      connector: "$1"
+      task: "$2"
+    type: UNTYPED

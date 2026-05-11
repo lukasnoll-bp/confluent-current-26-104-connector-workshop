@@ -1,0 +1,15 @@
+###############################################################################
+# Prometheus – scrape configuration for IEC 104 demo stack
+###############################################################################
+
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: kafka-connect-source
+    static_configs:
+      - targets:
+          - connect-source:9404
+        labels:
+          instance: connect-source

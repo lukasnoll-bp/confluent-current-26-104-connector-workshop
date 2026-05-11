@@ -1,0 +1,15 @@
+{
+  "name": "iec104-source",
+  "config": {
+    "connector.class": "com.bearingpoint.connectors.iec104.Iec104SourceConnector",
+    "tasks.max": "1",
+    "topic": "iec104",
+    "iec104.targets": "iec-server",
+    "iec104.target.iec-server.host": "iec104-simulator",
+    "iec104.target.iec-server.port": "2404",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+  }
+}

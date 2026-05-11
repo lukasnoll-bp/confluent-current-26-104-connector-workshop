@@ -1,0 +1,19 @@
+{
+  "name": "jdbc-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+    "topics": "IEC104_FLAT",
+    "connection.url": "jdbc:postgresql://postgres:5432/iec104",
+    "connection.user": "iec104",
+    "connection.password": "iec104",
+    "auto.create": "true",
+    "auto.evolve": "true",
+    "insert.mode": "insert",
+    "pk.mode": "none",
+    "table.name.format": "iec104_measurements",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081"
+  }
+}
