@@ -1,0 +1,886 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Is the connector healthy?",
+      "type": "row"
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Number of tasks configured for this connector. Each task is an independent worker thread polling the IEC 104 server. Should always match tasks.max in the connector config.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Total Tasks",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_worker_task_count",
+          "legendFormat": "Total",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Tasks actively collecting IEC 104 data right now. All tasks should always be Running — any drop to zero means the connector has stopped and data is no longer being collected.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 4, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Running Tasks",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "count(kafka_connect_task_running_ratio == 1) or vector(0)",
+          "legendFormat": "Running",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Tasks temporarily suspended (paused by an operator or by the connector framework). A paused task is not collecting data. Zero is expected during normal operation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 9, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Paused Tasks",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "count(kafka_connect_task_pause_ratio == 1) or vector(0)",
+          "legendFormat": "Paused",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Tasks that have crashed. Zero is the only acceptable value in production — a non-zero count means data is not being collected and manual intervention is required.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Failed Tasks",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_worker_task_count - (count(kafka_connect_task_running_ratio == 1) or vector(0)) - (count(kafka_connect_task_pause_ratio == 1) or vector(0))",
+          "legendFormat": "Failed",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Total number of times a task failed to start since the connector was deployed. Zero means the connector has started cleanly every single time — no crashes, no restarts required.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Task Startup Failures",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_worker_task_startup_failure_total",
+          "legendFormat": "Startup Failures",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Fraction of time each task has been in the Running state, sampled continuously (1.0 = fully running, 0.0 = fully stopped). A flat line at 1.0 across the entire time window proves the connector is rock-solid — it has never dropped or restarted during this period.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "running ratio",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.9 },
+              { "color": "green", "value": 0.99 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 5 },
+      "id": 6,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "min"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Task Running Ratio — stability over time (flat line at 1.0 = production-grade reliability)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_task_running_ratio",
+          "legendFormat": "{{ connector }} / task {{ task }}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 12 },
+      "id": 200,
+      "title": "How much data is flowing?",
+      "type": "row"
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "IEC 104 measurement frames received from the field device per second, measured directly at the protocol level by our custom connector metric. Spikes correspond to interrogation cycles; the steady baseline reflects periodic spontaneous transmissions from the RTU.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "events/s",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 13 },
+      "id": 10,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Records Read Rate  \u00b7  IEC 104 \u2192 Connector",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "iec104_source_records_read_rate{target_id=~\"$target_id\"}",
+          "legendFormat": "{{ target_id }}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Records successfully committed to the Kafka topic per second — the standard Kafka Connect source metric. Compare this with Records Read Rate: both lines should track each other closely. A growing gap means Kafka cannot absorb data as fast as the connector is reading it.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "records/s",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 13 },
+      "id": 11,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Records Written to Kafka Rate  \u00b7  Connector \u2192 Kafka",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_source_task_source_record_write_rate",
+          "legendFormat": "{{ connector }} / task {{ task }}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Number of IEC 104 events queued internally, waiting to be written to Kafka. Should stay near zero under steady-state load. A persistently growing buffer means Kafka cannot ingest data fast enough — a sign of back-pressure that will eventually cause data loss if left unchecked.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "buffered events",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 13 },
+      "id": 12,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Internal Buffer Depth  \u00b7  near zero = healthy",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "iec104_source_buffer_current_size{target_id=~\"$target_id\"}",
+          "legendFormat": "{{ target_id }}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
+      "id": 300,
+      "title": "Is all data reaching Kafka?",
+      "type": "row"
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Cumulative total of IEC 104 records received from the field device (blue) vs records durably written to the Kafka topic (green). If the two lines overlap, no data has been lost. A persistent gap between them means the connector received data that was never written to Kafka.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "total records (cumulative)",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 22 },
+      "id": 13,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Read vs Written — Cumulative Record Count  \u00b7  overlapping lines = zero data loss",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "iec104_source_records_read{target_id=~\"$target_id\"}",
+          "legendFormat": "Read from IEC 104  ({{ target_id }})",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_source_task_source_record_write_total",
+          "legendFormat": "Written to Kafka  ({{ connector }})",
+          "refId": "B"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Percentage of Kafka offset commits that succeeded. 100 % means every single batch of data was durably acknowledged by the Kafka broker. Anything below 100 % indicates potential data loss or message redelivery — not acceptable in a production deployment.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.95 },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 22 },
+      "id": 14,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Offset Commit Success  \u00b7  100 % = production-safe",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_task_offset_commit_success_percentage",
+          "legendFormat": "{{ connector }}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 },
+      "id": 400,
+      "title": "How fast is the pipeline?",
+      "type": "row"
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Average time the connector spends collecting a batch of IEC 104 events from the field device, in milliseconds. Lower is better. Spikes here indicate the IEC 104 server is slow to respond, the network is congested, or the connector is waiting for data between polling cycles.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "ms",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 31 },
+      "id": 15,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Poll Batch Avg Time  \u00b7  IEC 104 \u2192 Connector",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_source_task_poll_batch_avg_time_ms",
+          "legendFormat": "{{ connector }} / task {{ task }}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Average time to commit offsets to the Kafka broker, in milliseconds. This is the final handshake that guarantees data has been durably stored. Should be well under 1 second under normal conditions — high values indicate the Kafka broker is under load or network latency is elevated.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "ms",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 31 },
+      "id": 16,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Offset Commit Avg Time  \u00b7  Connector \u2192 Kafka",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_task_offset_commit_avg_time_ms",
+          "legendFormat": "{{ connector }} / task {{ task }}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "prometheus", "uid": "prom-connect" },
+      "description": "Average and maximum number of IEC 104 records bundled into a single Kafka write batch. Larger batches indicate more efficient throughput. Very small batches (near 1) suggest low-frequency or bursty IEC 104 traffic. The max line reveals burst peaks and helps right-size buffer configuration.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "records / batch",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 31 },
+      "id": 17,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Batch Size (Avg \u0026 Max)  \u00b7  larger = more efficient",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_task_batch_size_avg",
+          "legendFormat": "Avg  ({{ connector }})",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prom-connect" },
+          "expr": "kafka_connect_task_batch_size_max",
+          "legendFormat": "Max  ({{ connector }})",
+          "refId": "B"
+        }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 },
+      "id": 500,
+      "title": "What data is being collected?",
+      "type": "row"
+    },
+
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Number of IEC 104 measurements received per Common Address (CA) over time. Each CA identifies a distinct RTU or substation. Each colour is a different station — use this to confirm that all expected field devices are actively sending data into the pipeline.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "messages",
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "mode": "none", "group": "A" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "id": 20,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum", "lastNotNull"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Messages per RTU (Common Address) over Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT\n  $__timeGroup(inserted_at, $__interval, 0) AS time,\n  'CA-' || \"COMMONADDRESS\"::text AS metric,\n  COUNT(*) AS value\nFROM iec104_measurements\nWHERE inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\n  AND (\"TARGET_ID\" = ANY(string_to_array('${target_id:csv}', ',')) OR '${target_id:raw}' = '$__all')\nGROUP BY 1, 2\nORDER BY 1",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Breakdown of IEC 104 message types arriving over time — for example: M_ME_NC_1 (floating-point measurement), M_ME_NB_1 (scaled integer), M_SP_NA_1 (single-point status). Confirms the connector is capturing the full vocabulary of the IEC 104 protocol, not just a single data type.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "messages",
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "mode": "none", "group": "A" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+      "id": 21,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum", "lastNotNull"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Messages by IEC 104 Type over Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT\n  $__timeGroup(inserted_at, $__interval, 0) AS time,\n  \"TYPENAME\" AS metric,\n  COUNT(*) AS value\nFROM iec104_measurements\nWHERE inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\n  AND (\"TARGET_ID\" = ANY(string_to_array('${target_id:csv}', ',')) OR '${target_id:raw}' = '$__all')\nGROUP BY 1, 2\nORDER BY 1",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Total measurements persisted to PostgreSQL per time interval, across all RTUs and all IEC 104 data types. This reflects end-to-end throughput from the field device all the way to the database — the final proof that data is arriving and being permanently stored.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "messages / interval",
+            "drawStyle": "bars",
+            "fillOpacity": 50,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
+      "id": 22,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum", "mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Total Message Rate  \u00b7  end-to-end, persisted in PostgreSQL",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT\n  $__timeGroup(inserted_at, $__interval, 0) AS time,\n  COUNT(*) AS \"messages\"\nFROM iec104_measurements\nWHERE inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\n  AND (\"TARGET_ID\" = ANY(string_to_array('${target_id:csv}', ',')) OR '${target_id:raw}' = '$__all')\nGROUP BY 1\nORDER BY 1",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Message rate broken down per Common Address (RTU/substation). Shows which field devices are most active and whether all expected RTUs are contributing data. A flat or missing line for a particular CA means that substation has gone silent.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "messages / interval",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 48 },
+      "id": 23,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum", "mean"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Message Rate per RTU (Common Address)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT\n  $__timeGroup(inserted_at, $__interval, 0) AS time,\n  'CA-' || \"COMMONADDRESS\"::text AS metric,\n  COUNT(*) AS value\nFROM iec104_measurements\nWHERE inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\n  AND (\"TARGET_ID\" = ANY(string_to_array('${target_id:csv}', ',')) OR '${target_id:raw}' = '$__all')\nGROUP BY 1, \"COMMONADDRESS\"\nORDER BY 1",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Number of distinct RTUs (Common Addresses) that have reported at least one measurement in the selected time window. Use this to quickly verify that the expected number of substations are online and actively sending data.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 56 },
+      "id": 24,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Unique RTUs Reporting (Common Address Count)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT\n  NOW() AS time,\n  COUNT(DISTINCT \"COMMONADDRESS\") AS \"Unique Common Addresses\"\nFROM iec104_measurements\nWHERE inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\n  AND (\"TARGET_ID\" = ANY(string_to_array('${target_id:csv}', ',')) OR '${target_id:raw}' = '$__all')",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ]
+    },
+
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Table showing how many distinct RTUs (Common Addresses) each connector target is collecting from. In a real deployment this maps each connector instance to the substations it is responsible for — useful for capacity planning and topology verification.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "none",
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 16, "x": 8, "y": 56 },
+      "id": 25,
+      "options": {
+        "footer": { "show": false },
+        "showHeader": true
+      },
+      "title": "RTUs per Connector Target",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT\n  \"TARGET_ID\" AS \"Connector Target\",\n  COUNT(DISTINCT \"COMMONADDRESS\") AS \"RTUs (Common Addresses)\"\nFROM iec104_measurements\nWHERE inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\n  AND (\"TARGET_ID\" = ANY(string_to_array('${target_id:csv}', ',')) OR '${target_id:raw}' = '$__all')\nGROUP BY \"TARGET_ID\"\nORDER BY \"TARGET_ID\"",
+          "refId": "A",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ]
+    }
+
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["iec104", "connector", "metrics"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "prom-connect" },
+        "definition": "label_values(iec104_source_records_read_rate, target_id)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Target (IEC 104 Server)",
+        "multi": true,
+        "name": "target_id",
+        "options": [],
+        "query": { "qryType": 1, "query": "label_values(iec104_source_records_read_rate, target_id)" },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "IEC 104 Connector Metrics",
+  "uid": "iec104-connector-metrics",
+  "version": 1
+}

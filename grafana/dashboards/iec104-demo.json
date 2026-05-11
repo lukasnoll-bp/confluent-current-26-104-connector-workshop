@@ -1,0 +1,383 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "CA 1 — Substation",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Fault alarm (M_SP_NA_1, IOA 103). Boolean: false = Normal, true = FAULT.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "color": "green", "index": 0, "text": "Normal" },
+                "1": { "color": "red",   "index": 1, "text": "\u26a0 FAULT ALARM" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red",   "value": 0.5  }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "Fault Alarm (IOA 103)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  CASE WHEN \"VALUEBOOLEAN\" = true THEN 1.0 ELSE 0.0 END AS \"Alarm\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 103\nORDER BY inserted_at DESC\nLIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Last measured voltage (M_ME_NC_1, IOA 104). Gaussian noise around 110 kV.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "max": 130,
+          "min": 0,
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "orange", "value": 100  },
+              { "color": "green",  "value": 107  },
+              { "color": "orange", "value": 113  },
+              { "color": "red",    "value": 120  }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "title": "Voltage (kV, IOA 104)",
+      "type": "gauge",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Voltage (kV)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 104\nORDER BY inserted_at DESC\nLIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Last measured active power (M_ME_NB_1, IOA 102). Gaussian noise around 5000 W.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 1    }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "value_and_name"
+      },
+      "title": "Active Power (W, IOA 102)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Active Power (W)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 102\nORDER BY inserted_at DESC\nLIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Energy counter (M_ME_NC_1, IOA 107) linked to Active Power IOA 102. Freezes on trip.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "yellow", "mode": "fixed" },
+          "decimals": 2,
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "yellow", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "value_and_name"
+      },
+      "title": "Energy Meter (Wh, IOA 107)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Energy (Wh)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 107\nORDER BY inserted_at DESC\nLIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Active power over time (M_ME_NB_1, IOA 102). Drops to 0 on trip scenario.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "green", "mode": "fixed" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "W",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "decimals": 0,
+          "min": 0,
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Active Power History (IOA 102)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Active Power (W)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 102\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Voltage over time (M_ME_NC_1, IOA 104). Normal 95-125 kV around 110 kV. Collapses to 0 on trip.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "blue", "mode": "fixed" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "kV",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "decimals": 1,
+          "min": 0,
+          "max": 130,
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Voltage History (IOA 104)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Voltage (kV)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 104\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Solar (IOA 105, PeriodicWave 0-2800 W) and Wind (IOA 106, RandomWalk 0-3000 W) over time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "W",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "min": 0,
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Solar (W)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Wind (W)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "semi-dark-blue", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "id": 7,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Renewable Power — Solar + Wind",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Solar (W)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 105\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Wind (W)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 106\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Energy counter history (IOA 107) — monotonically increasing, freezes while breaker is open.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "yellow", "mode": "fixed" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "Wh",
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "decimals": 2,
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Energy Counter History (IOA 107)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Energy (Wh)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 107\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["iec104", "demo", "scada"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "IEC 104 Substation Demo",
+  "uid": "iec104-demo",
+  "version": 1
+}
