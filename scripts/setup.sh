@@ -103,7 +103,7 @@ while IFS= read -r stmt; do
   KSQL_RESPONSE=$(curl -s -w "\n%{http_code}" \
     -X POST "${KSQLDB}/ksql" \
     -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
-    -d "{\"ksql\": \"$(echo "$stmt" | tr '\n' ' ' | sed 's/"/\\"/g');\", \"streamsProperties\": {}}")
+    -d "{\"ksql\": \"$(echo "$stmt" | tr '\n' ' ' | sed 's/"/\\"/g')\", \"streamsProperties\": {}}")
 
   HTTP_CODE=$(echo "$KSQL_RESPONSE" | tail -1)
   BODY=$(echo "$KSQL_RESPONSE" | sed '$d')
@@ -117,9 +117,11 @@ while IFS= read -r stmt; do
   fi
 done < <(
   # Strip SQL comments and split on semicolons
+  # Use $'...' quoting so bash expands \n to a real newline before sed sees it;
+  # this makes the split work on both macOS (BSD sed) and Linux (GNU sed).
   sed 's/--.*$//' "${PROJECT_DIR}/ksqldb/statements.sql" \
     | tr '\n' ' ' \
-    | sed 's/;/;\n/g' \
+    | sed $'s/;/;\\\n/g' \
     | grep -v '^\s*$'
 )
 
