@@ -25,33 +25,7 @@ Kafka Connect Source ──► topic: iec104 ──► ksqlDB (UNNEST objects[])
 
 ## Quick Start
 
-### 1. Configure images
-
-Edit `docker-compose.yml` and replace the placeholder images:
-
-```yaml
-iec104-simulator:
-  image: IMAGE_PLACEHOLDER_SIMULATOR      # ← your simulator image
-
-connect-source:
-  image: IMAGE_PLACEHOLDER_CONNECT_SOURCE  # ← your Kafka Connect image
-```
-
-### 2. Configure the source connector
-
-Edit `connectors/iec104-source.json` and set your connector class and any
-additional properties:
-
-```json
-{
-  "config": {
-    "connector.class": "YOUR_CONNECTOR_CLASS_HERE",
-    ...
-  }
-}
-```
-
-### 3. Start the stack
+### 1. Start the stack
 
 ```bash
 docker compose up -d
@@ -63,11 +37,19 @@ Wait until all services are healthy:
 docker compose ps
 ```
 
-### 4. Deploy connectors & streams
+### 2. Deploy connectors & streams
+
+#### unix
 
 ```bash
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
+```
+
+#### windows
+
+```powershell
+./scripts/setup.ps1
 ```
 
 This will:
@@ -76,7 +58,7 @@ This will:
 3. Create ksqlDB streams to flatten the nested `objects[]` array
 4. Deploy the JDBC Sink Connector writing to PostgreSQL
 
-### 5. Verify
+### 3. Verify
 
 ```bash
 # Source connector status
@@ -90,7 +72,7 @@ docker exec -it postgres psql -U iec104 -d iec104 \
   -c 'SELECT count(*) FROM iec104_measurements;'
 ```
 
-### 6. Open dashboards
+### 4. Open dashboards
 
 | Service              | URL                        | Credentials  |
 |----------------------|----------------------------|--------------|
@@ -101,6 +83,12 @@ docker exec -it postgres psql -U iec104 -d iec104 \
 | **Connect Sink**     | http://localhost:8084       | –            |
 | **Prometheus**       | http://localhost:9090       | –            |
 | **JMX Exporter**     | http://localhost:9404/metrics | –          |
+
+## Tear Down
+
+```bash
+docker compose down -v
+```
 
 ## Connector Metrics Dashboard
 
@@ -165,8 +153,4 @@ on the `IEC104_FLAT` topic, which the JDBC Sink can write directly to PostgreSQL
 | Energy Counters    | FEEDER-1/2 Energy, XFMR-1 Total Energy       | 3001, 3002, 3003        |
 | Protection & Status| Breaker Status table, Alarms table            | 1001–1022, 1003–1031    |
 
-## Tear Down
 
-```bash
-docker compose down -v
-```
