@@ -1,0 +1,90 @@
+{
+  "Scenarios": [
+    {
+      "Name": "tree-falling",
+      "RecoveryMs": 0,
+      "Steps": [
+        {
+          "DelayMs": 0,
+          "Ca": 1,
+          "Oa": 101,
+          "ValueStr": "9999.0",
+          "Freeze": true,
+          "Description": "Tree falls into overhead line — short circuit, fault current surges to 9999 A"
+        },
+        {
+          "DelayMs": 5000,
+          "Ca": 1,
+          "Oa": 111,
+          "ValueStr": "true",
+          "Freeze": true,
+          "Description": "Protection relay detects overcurrent (>20000 A threshold) — relay activates (ON)"
+        },
+        {
+          "DelayMs": 5000,
+          "Ca": 1,
+          "Oa": 110,
+          "ValueStr": "OFF",
+          "Freeze": true,
+          "Description": "Circuit breaker A Bay 1 trips automatically — fault isolated"
+        },
+        {
+          "DelayMs": 5000,
+          "Ca": 1,
+          "Oa": 101,
+          "ValueStr": "0.0",
+          "Freeze": true,
+          "Description": "Line current drops to 0 A — overhead line de-energized"
+        },
+        {
+          "DelayMs": 0,
+          "Ca": 1,
+          "Oa": 102,
+          "ValueStr": "0.0",
+          "Freeze": true,
+          "Description": "Line voltage drops to 0 kV — overhead line fully de-energized"
+        }
+      ],
+      "RecoverySteps": []
+    },
+    {
+      "Name": "tree-restore",
+      "RecoveryMs": 0,
+      "Steps": [
+        {
+          "DelayMs": 0,
+          "Ca": 1,
+          "Oa": 111,
+          "ValueStr": "false",
+          "Freeze": false,
+          "Description": "Tree no longer causing short circuit — auto-reclose sequence initiated, protection relay resets (OFF)"
+        },
+        {
+          "DelayMs": 10000,
+          "Ca": 1,
+          "Oa": 110,
+          "ValueStr": "ON",
+          "Freeze": false,
+          "Description": "Circuit breaker A Bay 1 recloses after 10 second dead time — line re-energized"
+        },
+        {
+          "DelayMs": 5000,
+          "Ca": 1,
+          "Oa": 101,
+          "ValueStr": "4000.0",
+          "Freeze": false,
+          "Description": "Line current returns to normal 4000 A — overhead line fully operational"
+        },
+        {
+          "DelayMs": 0,
+          "Ca": 1,
+          "Oa": 102,
+          "ValueStr": "400.0",
+          "Freeze": false,
+          "Description": "Line voltage returns to normal 400 kV — overhead line fully operational"
+        }
+      ],
+      "RecoverySteps": []
+    }
+  ]
+}
