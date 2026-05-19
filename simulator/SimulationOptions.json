@@ -1,0 +1,211 @@
+﻿{
+  "Iec104Simulation": {
+    "CycleTimeMs": 5000,
+    "DataPointConfiguration": {
+
+      "Measures": [
+        {
+          "Id": "CA20_IOA25",
+          "Name": "Tap Changer Position",
+          "Ca": "20",
+          "Oa": "25",
+          "TypeId": 5,
+          "InitValue": "true"
+        },
+        {
+          "Id": "CA20_IOA27",
+          "Name": "Switchgear Status",
+          "Ca": "20",
+          "Oa": "27",
+          "TypeId": 3,
+          "InitValue": "INDETERMINATE",
+          "Mode": "Static"
+        },
+        {
+          "Id": "CA20_IOA26",
+          "Name": "Status Signal 26",
+          "Ca": "20",
+          "Oa": "26",
+          "TypeId": 1,
+          "Mode": "Periodic"
+        },
+        {
+          "Id": "CA20_IOA57",
+          "Name": "Status Signal 57",
+          "Ca": "20",
+          "Oa": "57",
+          "TypeId": 1,
+          "Mode": "Periodic"
+        },
+        {
+          "Id": "CA20_IOA28",
+          "Name": "Measured Power (scaled)",
+          "Ca": "20",
+          "Oa": "28",
+          "TypeId": 11,
+          "Mode": "RandomWalk",
+          "FluctuationRate": 100,
+          "MinValue": -1000,
+          "MaxValue": 1000
+        },
+        {
+          "Id": "CA20_IOA29",
+          "Name": "Temperature",
+          "Ca": "20",
+          "Oa": "29",
+          "TypeId": 13,
+          "Mode": "RandomWalk",
+          "FluctuationRate": 5.0,
+          "MinValue": 0.0,
+          "MaxValue": 100.0
+        },
+        {
+          "Id": "CA20_IOA31",
+          "Name": "Normalized Measurement",
+          "Ca": "20",
+          "Oa": "31",
+          "TypeId": 9,
+          "Mode": "Periodic"
+        },
+        {
+          "Id": "CA21_IOA31",
+          "Name": "Phase Angle A",
+          "Ca": "21",
+          "Oa": "31",
+          "TypeId": 9,
+          "Mode": "RandomWalk",
+          "FluctuationRate": 0.05,
+          "MinValue": -1.0,
+          "MaxValue": 1.0
+        },
+        {
+          "Id": "CA21_IOA32",
+          "Name": "Phase Angle B",
+          "Ca": "21",
+          "Oa": "32",
+          "TypeId": 9,
+          "Mode": "RandomWalk",
+          "FluctuationRate": 0.05,
+          "MinValue": -1.0,
+          "MaxValue": 1.0
+        },
+        {
+          "Id": "CA21_IOA33",
+          "Name": "Phase Angle C",
+          "Ca": "21",
+          "Oa": "33",
+          "TypeId": 9,
+          "Mode": "RandomWalk",
+          "FluctuationRate": 0.05,
+          "MinValue": -1.0,
+          "MaxValue": 1.0
+        },
+        {
+          "Id": "CA20_IOA40",
+          "Name": "Load Profile",
+          "Ca": "20",
+          "Oa": "40",
+          "TypeId": 13,
+          "Mode": "Profile",
+          "ProfileValues": [0.0, 10.0, 25.0, 50.0, 75.0, 100.0, 75.0, 50.0, 25.0, 10.0]
+        },
+        {
+          "Id": "CA1_IOA101",
+          "Name": "Line Current (A)",
+          "Ca": "1",
+          "Oa": "101",
+          "TypeId": 36,
+          "InitValue": "4000.0",
+          "Mode": "GaussianNoise",
+          "BaseValue": 4000.0,
+          "MinValue": 3700.0,
+          "MaxValue": 4300.0,
+          "FluctuationRate": 80.0
+        },
+        {
+          "Id": "CA1_IOA102",
+          "Name": "Line Voltage (kV)",
+          "Ca": "1",
+          "Oa": "102",
+          "TypeId": 36,
+          "InitValue": "400.0",
+          "Mode": "GaussianNoise",
+          "BaseValue": 400.0,
+          "MinValue": 390.0,
+          "MaxValue": 410.0,
+          "FluctuationRate": 1.5
+        },
+        {
+          "Id": "CA1_IOA110",
+          "Name": "Circuit Breaker A Bay 1",
+          "Ca": "1",
+          "Oa": "110",
+          "TypeId": 4,
+          "InitValue": "ON",
+          "Mode": "Static"
+        },
+        {
+          "Id": "CA1_IOA111",
+          "Name": "Protection Relay A Bay 1",
+          "Ca": "1",
+          "Oa": "111",
+          "TypeId": 2,
+          "InitValue": "false",
+          "Mode": "Static"
+        }
+      ],
+      "Commands":[
+        {
+          "Id": "CA20_IOA2",
+          "Name": "Tap Changer Command",
+          "Ca": "20",
+          "Oa": "2",
+          "TypeId": 47,
+          "ResponseId": "CA20_IOA25"
+        },
+        {
+          "Id": "CA100_IOA25",
+          "Name": "Switchgear Command",
+          "Ca": "100",
+          "Oa": "25",
+          "TypeId": 46,
+          "ResponseId": "CA20_IOA27"
+        },
+        {
+          "Id": "CA100_IOA26",
+          "Name": "Status Toggle Command",
+          "Ca": "100",
+          "Oa": "26",
+          "TypeId": 45,
+          "ResponseId": "CA20_IOA26"
+        },
+        {
+          "Id": "CA100_IOA29",
+          "Name": "Power Set Point",
+          "Ca": "100",
+          "Oa": "29",
+          "TypeId": 49,
+          "ResponseId": "CA20_IOA28"
+        },
+        {
+          "Id": "CA100_IOA30",
+          "Name": "Temperature Set Point",
+          "Ca": "100",
+          "Oa": "30",
+          "TypeId": 49,
+          "ResponseId": "CA20_IOA29"
+        },
+        {
+          "Id": "CA100_IOA31",
+          "Name": "Normalize Set Point",
+          "Ca": "100",
+          "Oa": "31",
+          "TypeId": 48,
+          "ResponseId": "CA20_IOA31"
+        }
+      ]
+    }
+  }
+
+}
+

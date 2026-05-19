@@ -11,12 +11,59 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "CA 1 — Substation",
+      "title": "CA 1 — Overhead Line Bay 1  |  Scenarios: tree-falling / tree-restore",
       "type": "row"
     },
     {
       "datasource": { "type": "postgres", "uid": "pg-iec104" },
       "description": "Fault alarm (M_SP_NA_1, IOA 103). Boolean: false = Normal, true = FAULT.",
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Circuit Breaker A Bay 1 (M_DP_TA_1, IOA 110). Static: ON = closed, OFF = tripped by protection relay.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "color": "red",   "index": 0, "text": "⚡ TRIPPED" },
+                "1": { "color": "green", "index": 1, "text": "CLOSED" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "value_and_name"
+      },
+      "title": "Circuit Breaker (IOA 110)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "pg-iec104" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  inserted_at AS time,\n  CASE WHEN \"VALUEBOOLEAN\" = true THEN 1.0 ELSE 0.0 END AS \"Breaker\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 110\nORDER BY inserted_at DESC\nLIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "pg-iec104" },
+      "description": "Protection Relay A Bay 1 (M_SP_TA_1, IOA 111). Activates when fault current exceeds threshold.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -25,7 +72,7 @@
               "type": "value",
               "options": {
                 "0": { "color": "green", "index": 0, "text": "Normal" },
-                "1": { "color": "red",   "index": 1, "text": "\u26a0 FAULT ALARM" }
+                "1": { "color": "red",   "index": 1, "text": "⚠ RELAY ACTIVE" }
               }
             }
           ],
@@ -39,17 +86,17 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
-      "id": 1,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "textMode": "auto"
+        "textMode": "value_and_name"
       },
-      "title": "Fault Alarm (IOA 103)",
+      "title": "Protection Relay (IOA 111)",
       "type": "stat",
       "targets": [
         {
@@ -57,68 +104,28 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  CASE WHEN \"VALUEBOOLEAN\" = true THEN 1.0 ELSE 0.0 END AS \"Alarm\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 103\nORDER BY inserted_at DESC\nLIMIT 1",
+          "rawSql": "SELECT\n  inserted_at AS time,\n  CASE WHEN \"VALUEBOOLEAN\" = true THEN 1.0 ELSE 0.0 END AS \"Relay\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 111\nORDER BY inserted_at DESC\nLIMIT 1",
           "refId": "A"
         }
       ]
     },
     {
       "datasource": { "type": "postgres", "uid": "pg-iec104" },
-      "description": "Last measured voltage (M_ME_NC_1, IOA 104). Gaussian noise around 110 kV.",
+      "description": "Last measured line current (M_ME_TF_1, IOA 101). Normal ~4000 A. Spikes to 9999 A on short circuit, then drops to 0 after breaker trip.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "decimals": 1,
-          "max": 130,
+          "decimals": 0,
           "min": 0,
+          "max": 10000,
           "unit": "none",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "red",    "value": null },
-              { "color": "orange", "value": 100  },
-              { "color": "green",  "value": 107  },
-              { "color": "orange", "value": 113  },
-              { "color": "red",    "value": 120  }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
-      "id": 2,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "title": "Voltage (kV, IOA 104)",
-      "type": "gauge",
-      "targets": [
-        {
-          "datasource": { "type": "postgres", "uid": "pg-iec104" },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Voltage (kV)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 104\nORDER BY inserted_at DESC\nLIMIT 1",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "datasource": { "type": "postgres", "uid": "pg-iec104" },
-      "description": "Last measured active power (M_ME_NB_1, IOA 102). Gaussian noise around 5000 W.",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "decimals": 0,
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red",   "value": null },
-              { "color": "green", "value": 1    }
+              { "color": "green",  "value": 1    },
+              { "color": "orange", "value": 4500 },
+              { "color": "red",    "value": 8000 }
             ]
           }
         },
@@ -127,37 +134,43 @@
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
       "id": 3,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "textMode": "value_and_name"
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
       },
-      "title": "Active Power (W, IOA 102)",
-      "type": "stat",
+      "title": "Line Current (A, IOA 101)",
+      "type": "gauge",
       "targets": [
         {
           "datasource": { "type": "postgres", "uid": "pg-iec104" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Active Power (W)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 102\nORDER BY inserted_at DESC\nLIMIT 1",
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Current (A)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 101\nORDER BY inserted_at DESC\nLIMIT 1",
           "refId": "A"
         }
       ]
     },
     {
       "datasource": { "type": "postgres", "uid": "pg-iec104" },
-      "description": "Energy counter (M_ME_NC_1, IOA 107) linked to Active Power IOA 102. Freezes on trip.",
+      "description": "Last measured line voltage (M_ME_TF_1, IOA 102). Normal ~400 kV ± 10 kV. Collapses to 0 kV after breaker trip.",
       "fieldConfig": {
         "defaults": {
-          "color": { "fixedColor": "yellow", "mode": "fixed" },
-          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "min": 0,
+          "max": 500,
           "unit": "none",
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "yellow", "value": null }]
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "orange", "value": 350  },
+              { "color": "green",  "value": 390  },
+              { "color": "orange", "value": 410  },
+              { "color": "red",    "value": 430  }
+            ]
           }
         },
         "overrides": []
@@ -165,37 +178,35 @@
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
       "id": 4,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"] },
-        "textMode": "value_and_name"
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
       },
-      "title": "Energy Meter (Wh, IOA 107)",
-      "type": "stat",
+      "title": "Line Voltage (kV, IOA 102)",
+      "type": "gauge",
       "targets": [
         {
           "datasource": { "type": "postgres", "uid": "pg-iec104" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Energy (Wh)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 107\nORDER BY inserted_at DESC\nLIMIT 1",
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Voltage (kV)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1 AND \"IOA\" = 102\nORDER BY inserted_at DESC\nLIMIT 1",
           "refId": "A"
         }
       ]
     },
     {
       "datasource": { "type": "postgres", "uid": "pg-iec104" },
-      "description": "Active power over time (M_ME_NB_1, IOA 102). Drops to 0 on trip scenario.",
+      "description": "Line current history (IOA 101). Normal band 3700–4300 A. Scenario: spikes to 9999 A on tree-falling, drops to 0 after breaker trips, recovers to 4000 A on tree-restore.",
       "fieldConfig": {
         "defaults": {
-          "color": { "fixedColor": "green", "mode": "fixed" },
+          "color": { "fixedColor": "orange", "mode": "fixed" },
           "custom": {
             "axisBorderShow": false,
-            "axisLabel": "W",
+            "axisLabel": "A",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "lineWidth": 2,
             "pointSize": 4,
             "scaleDistribution": { "type": "linear" },
@@ -208,13 +219,13 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
       "id": 5,
       "options": {
         "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
         "tooltip": { "mode": "multi" }
       },
-      "title": "Active Power History (IOA 102)",
+      "title": "Line Current History (IOA 101)",
       "type": "timeseries",
       "targets": [
         {
@@ -222,14 +233,14 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Active Power (W)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 102\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Current (A)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 101\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
           "refId": "A"
         }
       ]
     },
     {
       "datasource": { "type": "postgres", "uid": "pg-iec104" },
-      "description": "Voltage over time (M_ME_NC_1, IOA 104). Normal 95-125 kV around 110 kV. Collapses to 0 on trip.",
+      "description": "Line voltage history (IOA 102). Normal band 390–410 kV around 400 kV. Collapses to 0 kV when breaker trips, recovers to 400 kV on tree-restore.",
       "fieldConfig": {
         "defaults": {
           "color": { "fixedColor": "blue", "mode": "fixed" },
@@ -237,7 +248,7 @@
             "axisBorderShow": false,
             "axisLabel": "kV",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "lineWidth": 2,
             "pointSize": 4,
             "scaleDistribution": { "type": "linear" },
@@ -246,18 +257,17 @@
           },
           "decimals": 1,
           "min": 0,
-          "max": 130,
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
       "id": 6,
       "options": {
         "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
         "tooltip": { "mode": "multi" }
       },
-      "title": "Voltage History (IOA 104)",
+      "title": "Line Voltage History (IOA 102)",
       "type": "timeseries",
       "targets": [
         {
@@ -265,49 +275,59 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Voltage (kV)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 104\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Voltage (kV)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 102\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
           "refId": "A"
         }
       ]
     },
     {
       "datasource": { "type": "postgres", "uid": "pg-iec104" },
-      "description": "Solar (IOA 105, PeriodicWave 0-2800 W) and Wind (IOA 106, RandomWalk 0-3000 W) over time.",
+      "description": "Circuit breaker and protection relay state changes over time. Relay (IOA 111) = 1 when active, Breaker OFF (IOA 110) = 1 when tripped.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
           "custom": {
             "axisBorderShow": false,
-            "axisLabel": "W",
             "drawStyle": "line",
             "fillOpacity": 20,
             "lineWidth": 2,
-            "pointSize": 4,
+            "pointSize": 6,
             "scaleDistribution": { "type": "linear" },
-            "showPoints": "auto",
-            "spanNulls": true
+            "showPoints": "always",
+            "spanNulls": true,
+            "steppedLine": true
           },
           "min": 0,
-          "unit": "none"
+          "max": 1.2,
+          "unit": "none",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "index": 0, "text": "Normal / Closed" },
+                "1": { "index": 1, "text": "Active / Tripped" }
+              }
+            }
+          ]
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Solar (W)" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+            "matcher": { "id": "byName", "options": "Relay (IOA 111)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
           },
           {
-            "matcher": { "id": "byName", "options": "Wind (W)" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "semi-dark-blue", "mode": "fixed" } }]
+            "matcher": { "id": "byName", "options": "Breaker OFF (IOA 110)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
           }
         ]
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
       "id": 7,
       "options": {
-        "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
+        "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "right" },
         "tooltip": { "mode": "multi" }
       },
-      "title": "Renewable Power — Solar + Wind",
+      "title": "Protection Events — Relay & Breaker State",
       "type": "timeseries",
       "targets": [
         {
@@ -315,7 +335,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Solar (W)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 105\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "rawSql": "SELECT\n  inserted_at AS time,\n  CASE WHEN \"VALUEBOOLEAN\" = true THEN 1.0 ELSE 0.0 END AS \"Relay (IOA 111)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 111\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
           "refId": "A"
         },
         {
@@ -323,49 +343,8 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Wind (W)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 106\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
+          "rawSql": "SELECT\n  inserted_at AS time,\n  CASE WHEN \"VALUEBOOLEAN\" = false THEN 1.0 ELSE 0.0 END AS \"Breaker OFF (IOA 110)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 110\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
           "refId": "B"
-        }
-      ]
-    },
-    {
-      "datasource": { "type": "postgres", "uid": "pg-iec104" },
-      "description": "Energy counter history (IOA 107) — monotonically increasing, freezes while breaker is open.",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "fixedColor": "yellow", "mode": "fixed" },
-          "custom": {
-            "axisBorderShow": false,
-            "axisLabel": "Wh",
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "lineWidth": 2,
-            "pointSize": 4,
-            "scaleDistribution": { "type": "linear" },
-            "showPoints": "auto",
-            "spanNulls": true
-          },
-          "decimals": 2,
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
-      "id": 8,
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "multi" }
-      },
-      "title": "Energy Counter History (IOA 107)",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": { "type": "postgres", "uid": "pg-iec104" },
-          "editorMode": "code",
-          "format": "time_series",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  inserted_at AS time,\n  \"VALUEFLOAT\" AS \"Energy (Wh)\"\nFROM iec104_measurements\nWHERE \"COMMONADDRESS\" = 1\n  AND \"IOA\" = 107\n  AND inserted_at >= $__timeFrom()\n  AND inserted_at <= $__timeTo()\nORDER BY inserted_at",
-          "refId": "A"
         }
       ]
     }

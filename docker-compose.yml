@@ -64,6 +64,9 @@ services:
     ports:
       - "2404:2404"        # IEC 104 protocol
       - "8080:8080"        # Simulator web dashboard
+    volumes:
+      - ./simulator/SimulationOptions.json:/app/Configuration/SimulationOptions.json:ro
+      - ./simulator/Scenarios.json:/app/Configuration/Scenarios.json:ro
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
 
