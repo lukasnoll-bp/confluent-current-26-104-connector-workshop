@@ -8,9 +8,9 @@
           "DelayMs": 0,
           "Ca": 1,
           "Oa": 101,
-          "ValueStr": "9999.0",
+          "ValueStr": "20000.0",
           "Freeze": true,
-          "Description": "Tree falls into overhead line — short circuit, fault current surges to 9999 A"
+          "Description": "Tree falls into overhead line — short circuit, fault current surges to 20000 A"
         },
         {
           "DelayMs": 5000,
